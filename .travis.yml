@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t buket/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run buket/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t buket/multi-client ./client
+  - docker build -t buket/multi-nginx ./nginx
+  - docker build -t buket/multi-server ./server
+  - docker build -t buket/multi-worker ./worker
+  # log in to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those image and push to docker-hub
+  - docker push buket/multi-client
+  - docker push buket/multi-nginx
+  - docker push buket/multi-server
+  - docker push buket/multi-worker
